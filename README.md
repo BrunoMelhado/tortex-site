@@ -10,3 +10,6 @@ Projeto versionado com Git para acompanhar a evolucao do sistema Tortex.
 ## Git
 
 Este repositorio esta conectado ao GitHub e usa a branch principal `main`.
+
+
+Projeto criado para praticar Git e GitHub.
