@@ -7,3 +7,6 @@ Projeto versionado com Git para acompanhar a evolucao do sistema Tortex.
 - `htdocs/`: arquivos principais da aplicacao web.
 - `components/`, `services/`, `styles/`, `js/` e `data/`: arquivos de apoio do projeto.
 
+## Git
+
+Este repositorio esta conectado ao GitHub e usa a branch principal `main`.
