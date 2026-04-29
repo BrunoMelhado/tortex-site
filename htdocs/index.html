@@ -1,0 +1,746 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Administrativo</title>
+  <script>
+    (function () {
+      var theme = "light";
+      try {
+        var storedTheme = window.localStorage.getItem("dashboard_theme");
+        if (storedTheme === "dark" || storedTheme === "light") {
+          theme = storedTheme;
+        } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          theme = "dark";
+        }
+      } catch (error) {
+        theme = "light";
+      }
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/main.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar" aria-label="Menu lateral">
+      <div class="sidebar__header">
+        <div class="sidebar__title-row">
+          <button class="sidebar__home" id="sidebarHomeBtn" type="button">Home</button>
+        </div>
+        <button
+          class="theme-toggle"
+          id="themeToggleBtn"
+          type="button"
+          role="switch"
+          aria-pressed="false"
+          aria-checked="false"
+        >
+          <span class="theme-toggle__track" aria-hidden="true">
+            <span class="theme-toggle__glyph"></span>
+            <span class="theme-toggle__thumb"></span>
+          </span>
+        </button>
+      </div>
+      <nav class="sidebar__nav">
+        <button class="nav-link" data-route="sales" type="button">Vendas</button>
+        <button class="nav-link" data-route="products" type="button">Produtos</button>
+        <button class="nav-link" data-route="clients" type="button">Clientes</button>
+        <button class="nav-link" data-route="finance" type="button">Financeiro</button>
+        <button class="nav-link" data-route="sales-history" type="button">Historico de Vendas</button>
+      </nav>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar__left">
+          <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <h1 class="topbar__title">Visao Geral</h1>
+        </div>
+        <div class="topbar__actions">
+          <button class="btn-primary btn-topbar" id="newSaleBtn" type="button">Nova Venda</button>
+        </div>
+        <div class="topbar__logout">
+          <button class="btn-refresh btn-topbar btn-logout" id="logoutBtn" type="button" style="display: none;">Sair</button>
+        </div>
+      </header>
+
+      <section class="view view--active" data-view="dashboard">
+        <section class="kpi-grid" id="kpiGrid" aria-label="Indicadores principais"></section>
+
+        <section class="orders-section" aria-label="Pedidos recentes">
+          <div class="section-head">
+            <h2>Pedidos Recentes</h2>
+            <button class="btn-refresh" id="refreshOrders" type="button">Atualizar</button>
+          </div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th class="orders-table__status-col" aria-label="Status"></th>
+                  <th>Nome</th>
+                  <th>Tempo</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" data-view="products" aria-label="Tela de produtos">
+        <section class="products-section">
+          <div class="section-head section-head--products">
+            <h2>Produtos</h2>
+            <button class="btn-primary" id="registerProductBtn" type="button">Cadastro Produto</button>
+          </div>
+
+          <form class="filters-form" id="productFiltersForm" autocomplete="off">
+            <label class="filter-group">
+              <span>Buscar produto</span>
+              <input id="searchInput" name="search" type="search" placeholder="Digite o nome do produto" />
+            </label>
+
+            <label class="filter-group">
+              <span>Estoque</span>
+              <select id="stockFilter" name="stock">
+                <option value="all">Todos</option>
+                <option value="in">Com estoque</option>
+                <option value="out">Sem estoque</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Status</span>
+              <select id="statusFilter" name="status">
+                <option value="all">Todos</option>
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </label>
+          </form>
+
+          <div class="products-list" id="productsList"></div>
+          <p class="empty-state" id="productsEmptyState" hidden>Nenhum produto encontrado.</p>
+        </section>
+      </section>
+
+      <section class="view" data-view="clients" aria-label="Tela de clientes">
+        <section class="clients-section">
+          <div class="section-head">
+            <h2>Clientes</h2>
+            <button class="btn-primary" id="registerClientBtn" type="button">Cadastrar Cliente</button>
+          </div>
+
+          <form class="filters-form" id="clientFiltersForm" autocomplete="off">
+            <label class="filter-group">
+              <span>Nome</span>
+              <select id="clientNameFilter" name="clientId">
+                <option value="">Todos os clientes</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Telefone</span>
+              <input id="clientPhoneFilter" name="phone" type="search" placeholder="Filtrar por telefone" />
+            </label>
+
+            <label class="filter-group">
+              <span>Status</span>
+              <select id="clientStatusFilter" name="status">
+                <option value="all">Todos</option>
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </label>
+          </form>
+
+          <div class="clients-list" id="clientsList"></div>
+          <p class="empty-state" id="clientsEmptyState" hidden>Nenhum cliente encontrado.</p>
+        </section>
+      </section>
+
+      <section class="view" data-view="sales" aria-label="Tela de vendas">
+        <section class="sales-section">
+          <div class="section-head">
+            <h2>Vendas</h2>
+          </div>
+
+          <form class="filters-form filters-form--sales-range" id="salesManageFiltersForm" autocomplete="off">
+            <label class="filter-group">
+              <span>Nome do cliente</span>
+              <select id="salesManageClientFilter" name="clientId">
+                <option value="">Todos os clientes</option>
+              </select>
+            </label>
+
+            <div class="filter-group filter-group--date-range">
+              <span>Periodo da venda</span>
+              <div class="date-range-picker">
+                <label class="date-range-picker__field" for="salesManageStartDateFilter">
+                  <span>Inicio</span>
+                  <input id="salesManageStartDateFilter" name="startDate" type="date" />
+                </label>
+                <label class="date-range-picker__field" for="salesManageEndDateFilter">
+                  <span>Fim</span>
+                  <input id="salesManageEndDateFilter" name="endDate" type="date" />
+                </label>
+              </div>
+              <small class="field-hint" id="salesManageDateRangeSummary" aria-live="polite">Todos os periodos</small>
+            </div>
+
+            <label class="filter-group">
+              <span>Produto</span>
+              <input id="salesManageProductFilter" name="product" type="search" placeholder="Filtrar por produto" />
+            </label>
+          </form>
+
+          <div class="sales-list" id="salesManageList"></div>
+          <p class="empty-state" id="salesManageEmptyState" hidden>Nenhuma venda encontrada.</p>
+        </section>
+      </section>
+
+      <section class="view" data-view="finance" aria-label="Tela financeiro">
+        <section class="finance-section">
+          <div class="section-head">
+            <h2>Financeiro</h2>
+          </div>
+
+          <section class="finance-kpi-grid" aria-label="Indicadores financeiros">
+            <article class="kpi-card kpi-card--highlight">
+              <p class="kpi-card__label">A receber</p>
+              <p class="kpi-card__value" id="financeTotalReceivable">R$ 0,00</p>
+            </article>
+            <article class="kpi-card">
+              <p class="kpi-card__label">Devedores</p>
+              <p class="kpi-card__value" id="financeDebtorCount">0</p>
+            </article>
+            <article class="kpi-card">
+              <p class="kpi-card__label">Vendas em aberto</p>
+              <p class="kpi-card__value" id="financePendingSalesCount">0</p>
+            </article>
+            <article class="kpi-card finance-kpi-card--warning">
+              <p class="kpi-card__label">Valor atrasado</p>
+              <p class="kpi-card__value" id="financeOverdueAmount">R$ 0,00</p>
+            </article>
+          </section>
+
+          <form class="filters-form" id="financeFiltersForm" autocomplete="off">
+            <label class="filter-group">
+              <span>Nome do cliente</span>
+              <select id="financeClientFilter" name="clientId">
+                <option value="">Todos os clientes</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Status</span>
+              <select id="financeStatusFilter" name="status">
+                <option value="all">Todos</option>
+                <option value="overdue">Com vencimento</option>
+                <option value="current">Em dia</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Data prevista</span>
+              <input id="financeDateFilter" name="paymentDate" type="date" />
+            </label>
+          </form>
+
+          <div class="finance-list" id="financeList"></div>
+          <p class="empty-state" id="financeEmptyState" hidden>Nenhuma pendencia financeira encontrada.</p>
+        </section>
+      </section>
+
+      <section class="view" data-view="sales-history" aria-label="Tela de historico de vendas">
+        <section class="sales-section">
+          <div class="section-head">
+            <h2>Historico de Vendas</h2>
+          </div>
+
+          <form class="filters-form" id="salesHistoryFiltersForm" autocomplete="off">
+            <label class="filter-group">
+              <span>Nome do cliente</span>
+              <select id="salesHistoryClientFilter" name="clientId">
+                <option value="">Todos os clientes</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Status do pagamento</span>
+              <select id="salesHistoryPaymentStatusFilter" name="status_pagamento">
+                <option value="all">Todos</option>
+                <option value="Pago">Pago</option>
+                <option value="Pendente">Pendente</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Status da venda</span>
+              <select id="salesHistorySaleStatusFilter" name="status_venda">
+                <option value="Finalizada">Finalizada</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Data inicial</span>
+              <input id="salesHistoryStartDate" name="data_inicio" type="date" />
+            </label>
+
+            <label class="filter-group">
+              <span>Data final</span>
+              <input id="salesHistoryEndDate" name="data_fim" type="date" />
+            </label>
+          </form>
+
+          <div class="orders-table-wrap history-table-wrap">
+            <table class="orders-table history-table">
+              <thead>
+                <tr>
+                  <th>Venda</th>
+                  <th>Data</th>
+                  <th>Cliente</th>
+                  <th>Valor Total</th>
+                  <th>Forma Pagamento</th>
+                  <th>Status Venda</th>
+                  <th>Situacao Financeira</th>
+                </tr>
+              </thead>
+              <tbody id="salesHistoryTableBody"></tbody>
+            </table>
+          </div>
+          <p class="empty-state" id="salesHistoryEmptyState" hidden>Nenhuma venda encontrada.</p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="productModalOverlay" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+      <header class="modal__header">
+        <h2 id="productModalTitle">Produto</h2>
+      </header>
+
+      <form class="modal__form" id="productModalForm">
+        <label class="filter-group">
+          <span>ID do produto</span>
+          <input id="modalProductId" name="id" type="text" readonly />
+        </label>
+
+        <label class="filter-group">
+          <span>Nome do produto</span>
+          <input id="modalProductName" name="name" type="text" placeholder="Ex: Cafe Tradicional" required />
+        </label>
+
+        <label class="filter-group">
+          <span>Estoque do produto</span>
+          <input
+            id="modalProductStock"
+            name="stock"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="Ex: 25"
+            required
+          />
+        </label>
+
+        <label class="filter-group">
+          <span>Preco do produto</span>
+          <input
+            id="modalProductPrice"
+            name="price"
+            type="text"
+            inputmode="decimal"
+            placeholder="Ex: 12,50"
+            required
+          />
+        </label>
+
+        <label class="filter-group">
+          <span>Status do estoque</span>
+          <select id="modalProductStatus" name="status" required>
+            <option value="active">Ativo</option>
+            <option value="inactive">Inativo</option>
+          </select>
+        </label>
+
+        <footer class="modal__actions">
+          <button class="btn-danger" id="cancelModalBtn" type="button">Cancelar</button>
+          <button class="btn-success" id="saveModalBtn" type="submit">Salvar alteracoes</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="clientModalOverlay" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-label="Formulario de cliente">
+      <header class="modal__header modal__header--actions modal__header--compact">
+        <button class="btn-danger btn-compact" id="deleteClientModalBtn" type="button" hidden>Excluir</button>
+      </header>
+
+      <form class="modal__form" id="clientModalForm">
+        <input id="modalClientId" name="id" type="hidden" />
+
+        <label class="filter-group">
+          <span>Nome</span>
+          <input id="modalClientName" name="name" type="text" placeholder="Ex: Maria Oliveira" required />
+        </label>
+
+        <label class="filter-group">
+          <span>Telefone</span>
+          <input id="modalClientPhone" name="phone" type="tel" placeholder="Ex: 11999990000" required />
+        </label>
+
+        <label class="filter-group">
+          <span>Email</span>
+          <input id="modalClientEmail" name="email" type="email" placeholder="Ex: maria@email.com" required />
+        </label>
+
+        <div class="filter-group">
+          <span>Local</span>
+          <button
+            class="location-picker-toggle"
+            id="clientLocationPickerToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="clientLocationPickerPanel"
+          >
+            <span id="clientLocationSummary">Selecione o local</span>
+          </button>
+        </div>
+
+        <section class="location-picker-panel" id="clientLocationPickerPanel" hidden>
+          <div class="filters-form filters-form--two location-picker-panel__grid">
+            <label class="filter-group">
+              <span>Predio</span>
+              <select id="modalClientBuilding" name="building" required>
+                <option value="1">Predio 1</option>
+                <option value="2">Predio 2</option>
+              </select>
+            </label>
+
+            <label class="filter-group">
+              <span>Andar</span>
+              <select id="modalClientFloor" name="floor" required></select>
+            </label>
+          </div>
+        </section>
+
+        <footer class="modal__actions">
+          <button class="btn-danger" id="cancelClientModalBtn" type="button">Cancelar</button>
+          <button class="btn-success" id="saveClientModalBtn" type="submit">Salvar alteracoes</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="saleModalOverlay" aria-hidden="true">
+    <section class="modal modal--sale" role="dialog" aria-modal="true" aria-label="Nova Venda">
+      <form class="modal__form" id="saleModalForm">
+        <label class="filter-group">
+          <span>Cliente</span>
+          <select id="saleClientSelect" name="clientId" required></select>
+        </label>
+
+        <div class="sale-item-builder">
+          <label class="filter-group sale-item-builder__product">
+            <span>Produto</span>
+            <select id="saleProductSelect" name="productId"></select>
+          </label>
+
+          <label class="filter-group sale-item-builder__quantity">
+            <span>Quantidade</span>
+            <input
+              id="saleQuantityInput"
+              name="quantity"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              placeholder="Ex: 2"
+            />
+          </label>
+
+          <button class="btn-success sale-item-builder__button" id="addSaleItemBtn" type="button">
+            Adicionar item
+          </button>
+        </div>
+
+        <small class="field-hint" id="saleProductPriceHint">Preco base do produto: --</small>
+
+        <section class="sale-items-panel" aria-labelledby="saleItemsTitle">
+          <div class="sale-items-panel__header">
+            <h3 class="sale-items-panel__title" id="saleItemsTitle">Itens da venda</h3>
+          </div>
+          <div class="sale-items-list" id="saleItemsList"></div>
+          <p class="empty-state" id="saleItemsEmptyState">Nenhum item adicionado ainda.</p>
+        </section>
+
+        <label class="filter-group">
+          <span>Valor total da venda</span>
+          <input
+            id="saleTotalAmount"
+            name="saleTotalAmount"
+            type="text"
+            readonly
+          />
+        </label>
+
+        <label class="filter-group">
+          <span>Forma de pagamento</span>
+          <select id="salePaymentMethod" name="paymentMethod" required>
+            <option value="pix">Pix</option>
+            <option value="caju">Caju</option>
+            <option value="cash">Dinheiro</option>
+            <option value="fiado">Fiado</option>
+          </select>
+        </label>
+
+        <div class="filters-form filters-form--two">
+          <label class="filter-group">
+            <span>Quando pagar</span>
+            <select id="salePaymentTiming" name="paymentTiming">
+              <option value="">Selecionar</option>
+              <option value="immediate">Pagamento imediato</option>
+              <option value="same_day">No mesmo dia</option>
+            </select>
+          </label>
+
+          <label class="filter-group">
+            <span>Calendario (data futura)</span>
+            <input id="salePaymentDate" name="paymentDate" type="date" />
+          </label>
+        </div>
+
+        <label class="filter-group">
+          <span>Tipo de entrega</span>
+          <select id="saleDeliveryType" name="deliveryType" required>
+            <option value="retirada">Retirada</option>
+            <option value="entrega">Entrega</option>
+          </select>
+        </label>
+
+        <footer class="modal__actions">
+          <button class="btn-danger" id="cancelSaleModalBtn" type="button">Cancelar</button>
+          <button class="btn-success" id="saveSaleModalBtn" type="submit" data-sale-submit-mode="save">Salvar</button>
+          <button class="btn-primary btn-sale-finalize" id="finalizeSaleModalBtn" type="submit" data-sale-submit-mode="finalize">
+            Finalizar Venda
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="saleDetailsModalOverlay" aria-hidden="true">
+    <section class="modal modal--receipt" role="dialog" aria-modal="true" aria-labelledby="saleDetailsTitle">
+      <header class="modal__header receipt-header">
+        <h2 id="saleDetailsTitle">Detalhe da Venda</h2>
+        <p class="receipt-client" id="receiptClientName"></p>
+        <p class="receipt-meta"><strong>Codigo:</strong> <span id="receiptSaleCode"></span></p>
+        <p class="receipt-meta"><strong>Telefone:</strong> <span id="receiptClientPhone"></span></p>
+        <p class="receipt-meta"><strong>Endereco:</strong> <span id="receiptClientAddress"></span></p>
+        <p class="receipt-meta"><strong>Data:</strong> <span id="receiptSaleDate"></span></p>
+      </header>
+
+      <section class="receipt-body">
+        <section class="receipt-section">
+          <h3 class="receipt-section__title">Produtos</h3>
+          <div class="receipt-items-list" id="receiptItems"></div>
+          <p class="receipt-meta"><strong>Valor total:</strong> <span id="receiptTotalAmount"></span></p>
+        </section>
+
+        <section class="receipt-section">
+          <h3 class="receipt-section__title">Pagamento</h3>
+          <p class="receipt-meta"><strong>Forma de pagamento:</strong> <span id="receiptPaymentMethod"></span></p>
+          <p class="receipt-meta"><strong>Status do pagamento:</strong> <span id="receiptPaymentStatus"></span></p>
+          <p class="receipt-meta"><strong>Status da venda:</strong> <span id="receiptSaleStatus"></span></p>
+          <p class="receipt-meta"><strong>Data do pagamento:</strong> <span id="receiptPaymentDate"></span></p>
+          <p class="receipt-meta"><strong>Saldo pendente:</strong> <span id="receiptPendingAmount"></span></p>
+        </section>
+
+        <div id="receiptDeliveryInfo"></div>
+      </section>
+
+      <footer class="modal__actions">
+        <button class="btn-danger" id="deleteSaleDetailsBtn" type="button">Excluir Venda</button>
+        <button class="btn-success" id="printSaleReceiptBtn" type="button">Imprimir cupom</button>
+        <button class="btn-refresh" id="closeSaleDetailsBtn" type="button">Fechar</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="saleEditModalOverlay" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-label="Editar venda">
+      <header class="modal__header modal__header--actions">
+        <p class="sale-edit-code-top" id="saleEditCodeTop"></p>
+        <div class="sale-edit-actions">
+          <button
+            class="btn-danger btn-compact"
+            id="deleteSaleEditTopBtn"
+            type="button"
+          >
+            Excluir Venda
+          </button>
+          <button
+            class="btn-success btn-compact"
+            id="saveSaleEditTopBtn"
+            type="submit"
+            form="saleEditForm"
+            data-sale-submit-mode="save"
+          >
+            Salvar
+          </button>
+          <button
+            class="btn-primary btn-compact btn-sale-finalize"
+            id="finalizeSaleEditTopBtn"
+            type="submit"
+            form="saleEditForm"
+            data-sale-submit-mode="finalize"
+          >
+            Finalizar Venda
+          </button>
+        </div>
+      </header>
+
+      <form class="modal__form" id="saleEditForm">
+        <label class="filter-group">
+          <span>Nome do cliente</span>
+          <input id="saleEditClientName" type="text" readonly />
+        </label>
+
+        <div class="filter-group">
+          <span>Produto - Quantidade</span>
+          <div class="sale-edit-items-box" id="saleEditItemsBox" aria-readonly="true"></div>
+        </div>
+
+        <label class="filter-group">
+          <span>Tipo</span>
+          <input id="saleEditType" type="text" readonly />
+        </label>
+
+        <label class="filter-group">
+          <span>Data da venda</span>
+          <input id="saleEditDate" type="text" readonly />
+        </label>
+
+        <label class="filter-group">
+          <span>Valor total</span>
+          <input id="saleEditTotalAmount" type="text" readonly />
+        </label>
+
+        <label class="filter-group">
+          <span>Predio e andar</span>
+          <input id="saleEditLocation" type="text" readonly />
+        </label>
+
+        <label class="filter-group">
+          <span>Forma de pagamento</span>
+          <select id="saleEditPaymentMethod" name="paymentMethod" required>
+            <option value="Pix">Pix</option>
+            <option value="Caju">Caju</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Fiado">Fiado</option>
+          </select>
+        </label>
+
+        <label class="filter-group">
+          <span>Status do pagamento</span>
+          <select id="saleEditPaymentStatus" name="paymentStatus" required>
+            <option value="Pago">Pago</option>
+            <option value="Pendente">Pendente</option>
+          </select>
+        </label>
+
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="financeClientModalOverlay" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="financeClientModalTitle">
+      <header class="modal__header">
+        <h2 id="financeClientModalTitle">Resumo Financeiro</h2>
+      </header>
+
+      <div class="modal__form">
+        <p class="finance-modal__client" id="financeModalClientName"></p>
+
+        <div class="finance-modal__summary">
+          <p><strong>Saldo em aberto:</strong> <span class="finance-modal__amount" id="financeModalPendingAmount">R$ 0,00</span></p>
+          <p><strong>Lancamentos em aberto:</strong> <span id="financeModalPendingSalesCount">0</span></p>
+          <p><strong>Proximo vencimento:</strong> <span id="financeModalDueDates">-</span></p>
+        </div>
+
+        <div class="finance-modal__block">
+          <h3 class="finance-modal__title">Lancamentos de fiado</h3>
+          <div class="finance-modal__sales-list" id="financeModalSalesList"></div>
+          <p class="empty-state" id="financeSalesEmptyState" hidden>Nenhum lancamento em aberto.</p>
+        </div>
+
+        <footer class="modal__actions">
+          <button class="btn-danger" id="closeFinanceModalBtn" type="button">Fechar</button>
+          <button class="btn-warning" id="openFinancePaymentBtn" type="button">Pagar</button>
+        </footer>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="paymentModalOverlay" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+      <header class="modal__header modal__header--actions">
+        <h2 id="paymentModalTitle">Registrar Pagamento</h2>
+        <p class="payment-modal__debt" id="paymentDebtIndicator" hidden>-R$ 0,00</p>
+      </header>
+
+      <div class="modal__form">
+        <div class="filters-form filters-form--two">
+          <label class="filter-group">
+            <span>Cliente</span>
+            <select id="paymentClientSelect">
+              <option value="">Selecione um cliente</option>
+            </select>
+          </label>
+
+          <label class="filter-group">
+            <span>Valor do pagamento</span>
+            <input id="paymentAmount" type="text" inputmode="decimal" placeholder="Ex: 89,90" />
+          </label>
+
+          <label class="filter-group">
+            <span>Forma de pagamento</span>
+            <select id="paymentMethod">
+              <option value="Pix">Pix</option>
+              <option value="Caju">Caju</option>
+              <option value="Dinheiro">Dinheiro</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="filter-group">
+          <span>Observacao</span>
+          <textarea id="paymentNote" rows="3" placeholder="Opcional"></textarea>
+        </label>
+      </div>
+
+      <footer class="modal__actions">
+        <button class="btn-danger" id="closePaymentModalBtn" type="button">Cancelar</button>
+        <button class="btn-primary" id="submitPaymentBtn" type="button">Registrar Pagamento</button>
+      </footer>
+    </section>
+  </div>
+
+  <script type="module" src="./assets/js/main.js"></script>
+</body>
+</html>

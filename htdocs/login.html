@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Dashboard Administrativo</title>
+  <script>
+    (function () {
+      var theme = "light";
+      try {
+        var storedTheme = window.localStorage.getItem("dashboard_theme");
+        if (storedTheme === "dark" || storedTheme === "light") {
+          theme = storedTheme;
+        } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          theme = "dark";
+        }
+      } catch (error) {
+        theme = "light";
+      }
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/main.css" />
+</head>
+<body class="auth-mode">
+  <section class="auth-screen" id="authScreen" aria-label="Tela de login">
+    <article class="auth-card">
+      <header class="auth-card__header">
+        <h1>Entrar no Sistema</h1>
+        <p>Use seu login e senha para acessar a Home.</p>
+      </header>
+
+      <form class="auth-form" id="loginForm" autocomplete="on" novalidate>
+        <label class="filter-group">
+          <span>Login</span>
+          <input
+            id="loginInput"
+            name="login"
+            type="text"
+            placeholder="Usuario ou e-mail"
+            autocomplete="username"
+            required
+          />
+        </label>
+
+        <label class="filter-group">
+          <span>Senha</span>
+          <div class="auth-password">
+            <input
+              id="loginPasswordInput"
+              name="password"
+              type="password"
+              placeholder="Digite sua senha"
+              autocomplete="current-password"
+              required
+            />
+            <button class="auth-password__toggle" id="toggleLoginPasswordBtn" type="button" aria-label="Mostrar senha">
+              Mostrar
+            </button>
+          </div>
+        </label>
+
+        <p class="auth-error" id="loginError" role="alert" aria-live="polite" hidden></p>
+        <button class="btn-primary auth-submit" id="loginSubmitBtn" type="submit">Entrar</button>
+      </form>
+
+      <p class="auth-hint">Use um usuario ativo cadastrado na tabela <strong>usuarios</strong>.</p>
+    </article>
+  </section>
+
+  <script type="module" src="./assets/js/login.js"></script>
+</body>
+</html>

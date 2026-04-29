@@ -1,0 +1,8 @@
+.cpanel/
+.softaculous/
+.lastlogin
+.override
+DO NOT UPLOAD FILES HERE
+tortex/
+htdocs/config/database.php
+.env
